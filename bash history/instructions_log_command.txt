@@ -1,0 +1,125 @@
+To make this script accessible from any location and callable as a function, you can place it in `/usr/local/bin` and create a shell function that calls this script.
+
+1. **Save the Script in `/usr/local/bin`**:
+    - Save the script as `log_command.sh`.
+    - Make it executable.
+    - Move it to `/usr/local/bin`.
+
+2. **Create a Shell Function in `.bashrc`**:
+    - Add a function to your `.bashrc` to call the script with the provided arguments.
+
+### Step-by-Step Instructions
+
+#### 1. Save and Move the Script
+
+Save the following script as `log_command.sh`:
+
+```sh
+#!/bin/bash
+
+log_file=~/command_log.txt
+
+# Log the command, start time, and end time with memory and disk usage
+log_command() {
+    local command="$@"
+    local start_time=$(date '+%Y-%m-%d %H:%M:%S')
+    {
+        echo "Time: $start_time"
+        echo "Command: $command"
+        /usr/bin/time -v bash -c "$command"
+        local end_time=$(date '+%Y-%m-%d %H:%M:%S')
+        echo "End Time: $end_time"
+        echo "-----------------------"
+    } | tee -a $log_file
+}
+
+# Log the command passed to this script
+log_command "$@"
+```
+
+Make the script executable and move it to `/usr/local/bin`:
+
+```sh
+chmod +x log_command.sh
+sudo mv log_command.sh /usr/local/bin/log_command
+```
+
+#### 2. Add a Function to `.bashrc`
+
+Edit your `.bashrc` file to include a function that calls the `log_command` script:
+
+```sh
+nano ~/.bashrc
+```
+
+Add the following lines to your `.bashrc`:
+
+```sh
+log_command() {
+    /usr/local/bin/log_command "$@"
+}
+```
+
+Save and close the file, then source the `.bashrc` to apply the changes:
+
+```sh
+source ~/.bashrc
+```
+
+### Usage
+
+Now, you can use `log_command` from any terminal session:
+
+```sh
+log_command ls -l
+log_command echo "Hello, World!"
+```
+
+### Testing the Setup
+
+To verify that everything is set up correctly:
+
+1. **Run a Command**:
+    ```sh
+    log_command ls -l
+    ```
+
+2. **Check the Log File**:
+    ```sh
+    cat ~/command_log.txt
+    ```
+
+You should see entries similar to the following in the log file:
+
+```
+Time: 2024-05-24 14:30:00
+Command: ls -l
+<Output of ls -l>
+Command being timed: "bash -c ls -l"
+User time (seconds): 0.00
+System time (seconds): 0.01
+Percent of CPU this job got: 50%
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.02
+Average shared text size (kbytes): 0
+Average unshared data size (kbytes): 0
+Average stack size (kbytes): 0
+Average total size (kbytes): 0
+Maximum resident set size (kbytes): 2948
+Average resident set size (kbytes): 0
+Major (requiring I/O) page faults: 0
+Minor (reclaiming a frame) page faults: 197
+Voluntary context switches: 1
+Involuntary context switches: 1
+Swaps: 0
+File system inputs: 0
+File system outputs: 0
+Socket messages sent: 0
+Socket messages received: 0
+Signals delivered: 0
+Page size (bytes): 4096
+Exit status: 0
+End Time: 2024-05-24 14:30:02
+-----------------------
+```
+
+This setup makes your `log_command` functionality available as a shell command from anywhere in your terminal sessions.
